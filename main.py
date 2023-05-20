@@ -3,6 +3,7 @@ import sys
 import re
 import queue
 import time
+from classes.neuron import *
 
 numbers = []            # number of neurons in each layer
 considerBias = None     # 0/1
@@ -39,13 +40,12 @@ with open("settings.txt", "r") as file:
             else:
                 print("Unexpected line in the file:", line)
 
-print("Numbers:", numbers)
-print("Consider Bias:", considerBias)
-print("Program Mode:", programMode)
-print("Network File:", networkFile)
-print("Pattern File:", patternFile)
-
 if programMode == 0:
     import learning
 else:
     import testing
+
+n = Neuron([-0.28, 1.42, 0.99], 0)
+inputs = [3.5, 1.2, -0.7]
+
+print(f"inputs: {inputs}, output: {n.calculateNeuronOutput(inputs)}")
