@@ -4,12 +4,17 @@ import re
 import queue
 import time
 from classes.neuron import *
+from classes.layer import *
+
+### STATIC PARAMETERS ###
 
 numbers = []            # number of neurons in each layer
 considerBias = None     # 0/1
 programMode = None      # 0 - learning/1 - testing
 networkFile = None      # path
 patternFile = None      # path
+
+### LOADING SETTINGS ###
 
 with open("settings.txt", "r") as file:
     lines = file.readlines()
@@ -40,12 +45,48 @@ with open("settings.txt", "r") as file:
             else:
                 print("Unexpected line in the file:", line)
 
+### FUNCTIONS ###
+
+# Flush keyboard input
+def flush_input():
+    try:
+        import msvcrt
+        while msvcrt.kbhit():
+            msvcrt.getch()
+    except ImportError:
+        import sys, termios
+        termios.tcflush(sys.stdin, termios.TCIOFLUSH)
+
+# Clear screen
+def clear():
+    import os
+    os.system('cls' if os.name == 'nt' else 'clear')
+    flush_input()
+
+def setupMLP():
+    print("Ile neuronów umieścić w warstwie wejściowej?")
+    inputNeuronsNumber = int(input())
+    clear()
+    print("Ile ma być warstw ukrytych?")
+    hiddenLayersNumber = int(input())
+    clear()
+    hiddenLayersNeuronNumbers = list()
+    for i in range(0, hiddenLayersNumber):
+        print(f"Liczba neuronów w warstwie ukrytej #{i+1}:")
+        hiddenLayersNeuronNumbers.append(int(input()))
+        clear()
+
+    
+
+
+setupMLP()
+
+
+
+
+
 if programMode == 0:
     import learning
 else:
     import testing
 
-n = Neuron([-0.28, 1.42, 0.99], 0)
-inputs = [3.5, 1.2, -0.7]
-
-print(f"inputs: {inputs}, output: {n.calculateNeuronOutput(inputs)}")

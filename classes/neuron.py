@@ -6,26 +6,13 @@ def sigmoid(x):
 
 class Neuron:
     def __init__(self, weights, bias):
-        self.weights = weights
+        self.weights = weights              # Weights on connection between this neuron and the neurons from PREVIOUS layer
         self.bias = bias
-
-        # leave it like that?
-        #weights.reverse()
-        #weights.append(bias)
-        #weights.reverse()
-
 
     def calculateNeuronOutput(self, inputs):
         result = np.dot(self.weights, inputs)
-        print(f"result: {result}")
-        print(f"weights: {self.weights}")
-        print(f"inputs: {inputs}")
         return self.activationFunction(sigmoid, result)
 
     def activationFunction(self, function, value):
         x = function(value + self.bias)
-        print(f"result after sigmoid: {x}")
-        if x >= 0:
-            return True
-        else:
-            return False
+        return x
