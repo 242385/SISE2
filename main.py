@@ -17,6 +17,7 @@ networkFile = None  # path
 patternFile = None  # path
 
 dataVector = [0.23, 2.3, 5.5, 1.12]
+target = [1, 2, 3, 4]
 
 ### LOADING SETTINGS ###
 
@@ -133,6 +134,7 @@ def setupMLP():
 
 mlp = setupMLP()
 mlp.forwardPropagation()
+mlp.backPropagation(target, 0.5)
 
 if programMode == 0:
     import learning

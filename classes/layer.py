@@ -35,6 +35,6 @@ def sigmoid(v):
     outputVector = list()
     for x in v:
         s = 1 / (1 + np.exp(-x))
-        s = np.interp(s, [0, 1], [-1, 1])
+        # s = np.interp(s, [0, 1], [-1, 1])   # This is interpolated to range [-1 ; 1] and might affect output
         outputVector.append(s)
     return outputVector
