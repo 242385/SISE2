@@ -132,9 +132,32 @@ def setupMLP():
 
 ### MAIN ###
 
-mlp = setupMLP()
-mlp.forwardPropagation()
-mlp.backPropagation(target, 0.5)
+#mlp = setupMLP()
+#mlp.forwardPropagation()
+#mlp.backPropagation(target, 0.5)
+
+data = []
+target = []
+with open('patterns/iris.csv', 'r') as file:
+    for line in file:
+        line = line.strip()
+        if line:
+            values = line.split(',')
+            features = [float(value) for value in values[:4]]
+            data.append(features)
+            if values[4] == 'Iris-setosa':
+                target.append(0)
+            if values[4] == 'Iris-versicolor':
+                target.append(1)
+            if values[4] == 'Iris-virginica':
+                target.append(2)
+
+dataVector = np.array(data)
+target = np.array(target)
+
+
+print(dataVector)
+print(target)
 
 if programMode == 0:
     import learning
