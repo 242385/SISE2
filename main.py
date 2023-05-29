@@ -187,6 +187,15 @@ mlp = setupMLP()
 
 def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
     for epoch in range(epochs):
+        # Reset previous biases and weights:
+        #for h in mlp.hiddenlayers:
+        #    for n in h.neurons:
+        #        n.prev_weight_updates = [0 for _ in range(len(n.weights))]
+        #        n.prev_bias_update = 0
+        #for n in mlp.outputlayer.neurons:
+        #    n.prev_weight_updates = [0 for _ in range(len(n.weights))]
+        #    n.prev_bias_update = 0
+
         for i in range(len(inputpoints)):
             # Forward propagate
             mlp.setInput(inputpoints[i])
@@ -222,7 +231,7 @@ def test(mlp, test_inputs, test_targets):
     print(f"Properly classified: {accuracy}/1.0")
 
 
-train(mlp, dataVector, target, 0.5, 0.9, 100)
+train(mlp, dataVector, target, 0.5, 0.1, 500)
 test(mlp, testedData, target)
 
 if programMode == 0:

@@ -6,8 +6,8 @@ class Neuron:
         self.bias = bias
         self.delta = float()
         if weights is not None:
-            self.prev_weight_updates = [0 for _ in range(len(weights))]
-        self.prev_bias_update = 0
+            self.prev_weights = [0 for _ in range(len(weights))]
+        self.prev_bias = 0
 
     def z(self, inputs):
         return np.dot(self.weights, inputs) + self.bias

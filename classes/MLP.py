@@ -35,9 +35,24 @@ class MLP:
             inputs = self.hiddenlayers[i - 1].outputs if i != 0 else self.inputlayer.outputs
             for neuron in layer.neurons:
                 for k in range(len(neuron.weights)):
-                    neuron.weights[k] -= learningRate * neuron.delta * inputs[k]
+                    # Compute gradient (negative for descent)
+                    gradient = - neuron.delta * inputs[k]
+                    # Compute the difference between current and previous weight
+                    weight_difference = neuron.weights[k] - neuron.prev_weights[k]
+                    # Compute the weight update
+                    delta_weight = learningRate * gradient + momentumCoeff * weight_difference
+                    # Update the previous weights to current weights before weight update
+                    neuron.prev_weights[k] = neuron.weights[k]
+                    # Update the weights
+                    neuron.weights[k] += delta_weight
+
                 if applyBias:
-                    neuron.bias -= learningRate * neuron.delta  # Update bias
+                    # Similar steps for the bias
+                    gradient_bias = - neuron.delta
+                    bias_difference = neuron.bias - neuron.prev_bias
+                    delta_bias = learningRate * gradient_bias + momentumCoeff * bias_difference
+                    neuron.prev_bias = neuron.bias
+                    neuron.bias += delta_bias
 
     def forwardPropagation(self):
         # The output of the input layer is its inputs
