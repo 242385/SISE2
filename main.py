@@ -6,6 +6,7 @@ import queue
 import time
 import pickle
 import numpy as np
+import matplotlib.pyplot as plt
 
 from classes.neuron import *
 from classes.layer import *
@@ -186,13 +187,15 @@ mlp = setupMLP()
 
 
 def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
+    errorsPlot = []
+    epochsPlot = []
     for epoch in range(epochs):
         # Reset previous biases and weights:
-        #for h in mlp.hiddenlayers:
+        # for h in mlp.hiddenlayers:
         #    for n in h.neurons:
         #        n.prev_weight_updates = [0 for _ in range(len(n.weights))]
         #        n.prev_bias_update = 0
-        #for n in mlp.outputlayer.neurons:
+        # for n in mlp.outputlayer.neurons:
         #    n.prev_weight_updates = [0 for _ in range(len(n.weights))]
         #    n.prev_bias_update = 0
 
@@ -209,6 +212,19 @@ def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
             mlp.backPropagation(targets[i], learning_rate, momentumCoeff, considerBias, considerMomentum)
 
         print(f'Epoch: {epoch}, Error: {error}')
+        errorsPlot.append(float(error))
+        epochsPlot.append(epoch)
+
+    plotting(epochsPlot, errorsPlot)
+
+
+def plotting(epochs, errors):
+    plt.plot(epochs, errors)
+    plt.xlabel("Epoka")
+    plt.ylabel("Wartość Błędu")
+    plt.title("Zależność Wartości Błędu od Epoki")
+    plt.xticks(np.arange(start=0, stop=(len(epochs) + 1), step=(len(epochs) / 10)))
+    plt.show()
 
 
 def test(mlp, test_inputs, test_targets):
