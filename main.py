@@ -4,7 +4,7 @@ import sys
 import re
 import queue
 import time
-
+import pickle
 import numpy as np
 
 from classes.neuron import *
@@ -233,6 +233,16 @@ def test(mlp, test_inputs, test_targets):
 
 train(mlp, dataVector, target, 0.5, 0.1, 500)
 test(mlp, testedData, target)
+
+##ZAPISYWANIE
+file = open('networks/network.txt', 'wb')
+pickle.dump(mlp, file)
+file.close()
+
+##ODCZYTYWANIE
+file = open('networks/network.txt', 'rb')
+mlpOdczytaneZPliku = pickle.load(file)
+file.close()
 
 if programMode == 0:
     import learning
