@@ -3,6 +3,7 @@
 3 // itd.
 
 0 // czy uwzględniać bias (0 – nie, 1 – tak)
+0 // czy uwzględniać momentum (0 – nie, 1 – tak)
 0 // tryb nauki/testowania (0 – nauka, 1 – testowanie)
 networks\network.txt // plik sieci – tu sieć jest zapisywana i stąd jest odczytywana, być może inny format będzie
 patterns\pattern.csv // plik wzorca – możliwość wczytania

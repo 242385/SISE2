@@ -10,7 +10,7 @@ class MLP:
     def setInput(self, input):
         self.inputlayer.inputs = input
 
-    def backPropagation(self, targetOutputs, learningRate):
+    def backPropagation(self, targetOutputs, learningRate, momentumCoeff, applyBias, applyMomentum):
         # Calculate the delta (error term) for each neuron in the output layer
         for i in range(len(self.outputlayer.neurons)):
             neuron = self.outputlayer.neurons[i]
@@ -29,16 +29,19 @@ class MLP:
                 neuron.delta = delta
 
         # Update the weights and biases of the neurons in the output layer and the hidden layers
+        if not applyMomentum:
+            momentumCoeff = 0
         for i, layer in enumerate(self.hiddenlayers + [self.outputlayer]):
             inputs = self.hiddenlayers[i - 1].outputs if i != 0 else self.inputlayer.outputs
             for neuron in layer.neurons:
                 for k in range(len(neuron.weights)):
                     neuron.weights[k] -= learningRate * neuron.delta * inputs[k]
-                neuron.bias -= learningRate * neuron.delta  # Update bias
+                if applyBias:
+                    neuron.bias -= learningRate * neuron.delta  # Update bias
 
     def forwardPropagation(self):
         # The output of the input layer is its inputs
-        self.inputlayer.outputs = self.inputlayer.layerOutput()
+        self.inputlayer.outputs = self.inputlayer.inputs
 
         # The inputs of the first hidden layer are the outputs of the input layer
         self.hiddenlayers[0].inputs = self.inputlayer.outputs
@@ -57,9 +60,9 @@ class MLP:
         self.outputlayer.inputs = self.hiddenlayers[-1].outputs
 
     def networkOutput(self):
-        return self.outputlayer.outputs
+        return self.outputlayer.layerOutput()
 
-    def computeError(self, inputs, y):
+    def computeError(self, y):
         # Collect all output neurons
         output_neurons = self.outputlayer.neurons
 

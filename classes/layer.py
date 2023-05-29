@@ -32,7 +32,6 @@ class Layer:
         return self.outputs
 
 
-
 def sigmoid(v):
     outputVector = list()
     for x in v:

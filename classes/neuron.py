@@ -5,9 +5,11 @@ class Neuron:
         self.weights = weights              # Weights on connection between this neuron and the neurons from PREVIOUS layer
         self.bias = bias
         self.delta = float()
+        if weights is not None:
+            self.prev_weight_updates = [0 for _ in range(len(weights))]
+        self.prev_bias_update = 0
 
     def z(self, inputs):
-        #print(f"z {np.dot(self.weights, inputs) + self.bias}")
         return np.dot(self.weights, inputs) + self.bias
 
     def a(self, inputs):

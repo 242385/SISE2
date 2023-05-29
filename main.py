@@ -4,6 +4,9 @@ import sys
 import re
 import queue
 import time
+
+import numpy as np
+
 from classes.neuron import *
 from classes.layer import *
 from classes.MLP import *
@@ -12,12 +15,16 @@ from classes.MLP import *
 
 numbers = []  # number of neurons in each layer
 considerBias = None  # 0/1
+considerMomentum = None  # 0/1
 programMode = None  # 0 - learning/1 - testing
 networkFile = None  # path
 patternFile = None  # path
 
 dataVector = [list()]
 target = list()
+
+testedData = [list()]
+outputs = list()
 
 ### LOADING SETTINGS ###
 
@@ -41,6 +48,8 @@ with open("settings.txt", "r") as file:
         if not reading_numbers:
             if considerBias is None:
                 considerBias = int(line)
+            elif considerMomentum is None:
+                considerMomentum = int(line)
             elif programMode is None:
                 programMode = int(line)
             elif networkFile is None:
@@ -75,16 +84,16 @@ def randomWeights(count):
     weights = list()
     for i in range(0, count):
         r = random.Random()
-        x = r.uniform(-1.0, 1.0)
+        x = r.uniform(-0.5, 0.5)
         weights.append(x)
     return weights
 
 
-def loadData():
+def loadLearningData():
     global dataVector, target
     data = []
     target = []
-    with open('patterns/iris.csv', 'r') as file:
+    with open('patterns/learning.csv', 'r') as file:
         for line in file:
             line = line.strip()
             if line:
@@ -100,6 +109,23 @@ def loadData():
 
     dataVector = np.array(data)
     target = np.array(target)
+
+
+def loadTestingData():
+    global testedData, outputs
+    data = []
+    output = []
+    with open('patterns/learning.csv', 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line:
+                values = line.split(',')
+                features = [float(value) for value in values[:4]]
+                data.append(features)
+                output.append([])
+
+    testedData = np.array(data)
+    outputs = np.array(output)
 
 
 def setupMLP():
@@ -154,16 +180,13 @@ def setupMLP():
 
 ### MAIN ###
 
-loadData()
+loadLearningData()
+loadTestingData()
 mlp = setupMLP()
 
 
-# mlp.forwardPropagation()
-# mlp.backPropagation(target, 0.5)
-
-def train(mlp, inputpoints, targets, learning_rate, epochs):
+def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
     for epoch in range(epochs):
-        total_error = 0
         for i in range(len(inputpoints)):
             # Forward propagate
             mlp.setInput(inputpoints[i])
@@ -171,16 +194,36 @@ def train(mlp, inputpoints, targets, learning_rate, epochs):
 
             # Compute and print error
             output = mlp.networkOutput()
-            error = mlp.computeError(inputpoints[i], targets[i])
-            total_error += error
+            error = mlp.computeError(targets[i])
 
             # Back propagate
-            mlp.backPropagation(targets[i], learning_rate)
+            mlp.backPropagation(targets[i], learning_rate, momentumCoeff, considerBias, considerMomentum)
 
-        print(f'Epoch: {epoch}, Error: {total_error}')
+        print(f'Epoch: {epoch}, Error: {error}')
 
 
-train(mlp, dataVector, target, 0.1, 100)
+def test(mlp, test_inputs, test_targets):
+    # Store the number of correct predictions
+    correct_predictions = 0
+
+    # For each test input
+    for i in range(len(test_inputs)):
+        # Get the MLP's output for this input
+        mlp.setInput(test_inputs[i])
+        mlp.forwardPropagation()
+        output = mlp.networkOutput()
+
+        # If the output is close to the target, count it as a correct prediction
+        if np.argmax(output) == np.argmax(test_targets[i]):
+            correct_predictions += 1
+
+    # Calculate the accuracy
+    accuracy = correct_predictions / len(test_inputs)
+    print(f"Properly classified: {accuracy}/1.0")
+
+
+train(mlp, dataVector, target, 0.5, 0.9, 100)
+test(mlp, testedData, target)
 
 if programMode == 0:
     import learning
