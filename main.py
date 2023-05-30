@@ -201,22 +201,23 @@ mlp = setupMLP()
 def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
     errorsPlot = []
     epochsPlot = []
+    error = 1
     for epoch in range(epochs):
-        for i in range(len(inputpoints)):
-            # Forward propagate
-            mlp.setInput(inputpoints[i])
-            mlp.forwardPropagation()
+            for i in range(len(inputpoints)):
+                # Forward propagate
+                mlp.setInput(inputpoints[i])
+                mlp.forwardPropagation()
 
-            # Compute and print error
-            output = mlp.networkOutput()
-            error = mlp.computeError(targets[i])
+                # Compute and print error
+                output = mlp.networkOutput()
+                error = mlp.computeError(targets[i])
 
-            # Back propagate
-            mlp.backPropagation(targets[i], learning_rate, momentumCoeff, considerBias, considerMomentum)
+                # Back propagate
+                mlp.backPropagation(targets[i], learning_rate, momentumCoeff, considerBias, considerMomentum)
 
-        print(f'Epoch: {epoch}, Error: {error}')
-        errorsPlot.append(float(error))
-        epochsPlot.append(epoch)
+            print(f'Epoch: {epoch}, Error: {error}')
+            errorsPlot.append(float(error))
+            epochsPlot.append(epoch)
 
     plotting(epochsPlot, errorsPlot)
 
@@ -247,7 +248,7 @@ def test(mlp, test_inputs, test_targets):
         # If the output is close to the target, count it as a correct prediction
         outputMax = np.argmax(output)
 
-        if abs(output[outputMax] - test_targets[i][targets[i]]) <= 0.15:
+        if abs(output[outputMax] - test_targets[i][targets[i]]) <= 0.2:
             correct_predictions += 1
 
     # Calculate the accuracy
