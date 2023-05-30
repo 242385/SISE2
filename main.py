@@ -1,11 +1,6 @@
 # Import, system
 import random
-import sys
-import re
-import queue
-import time
 import pickle
-import numpy as np
 
 from classes.neuron import *
 from classes.layer import *
@@ -13,17 +8,23 @@ from classes.MLP import *
 
 ### STATIC PARAMETERS ###
 
-numbers = []  # number of neurons in each layer
+numbers = list()  # number of neurons in each layer
 considerBias = None  # 0/1
 considerMomentum = None  # 0/1
 programMode = None  # 0 - learning/1 - testing
+biasValue = None  # 0-1
+learningRate = None  # 0-1
+momentumRate = None  # 0-1
+epochsNumber = None  # int
 networkFile = None  # path
-patternFile = None  # path
+learningFile = None  # path
+testingFile = None  # path
 
 dataVector = [list()]
 target = list()
 
 testedData = [list()]
+targetsTesting = list()
 outputs = list()
 
 ### LOADING SETTINGS ###
@@ -52,10 +53,20 @@ with open("settings.txt", "r") as file:
                 considerMomentum = int(line)
             elif programMode is None:
                 programMode = int(line)
+            elif biasValue is None:
+                biasValue = float(line)
+            elif learningRate is None:
+                learningRate = float(line)
+            elif momentumRate is None:
+                momentumRate = float(line)
+            elif epochsNumber is None:
+                epochsNumber = int(line)
             elif networkFile is None:
                 networkFile = line
-            elif patternFile is None:
-                patternFile = line
+            elif learningFile is None:
+                learningFile = line
+            elif testingFile is None:
+                testingFile = line
             else:
                 print("Unexpected line in the file:", line)
 
@@ -93,7 +104,7 @@ def loadLearningData():
     global dataVector, target
     data = []
     target = []
-    with open('patterns/learning.csv', 'r') as file:
+    with open(learningFile, 'r') as file:
         for line in file:
             line = line.strip()
             if line:
@@ -112,10 +123,11 @@ def loadLearningData():
 
 
 def loadTestingData():
-    global testedData, outputs
+    global testedData, outputs, targetsTesting
     data = []
+    target = []
     output = []
-    with open('patterns/learning.csv', 'r') as file:
+    with open(testingFile, 'r') as file:
         for line in file:
             line = line.strip()
             if line:
@@ -123,32 +135,31 @@ def loadTestingData():
                 features = [float(value) for value in values[:4]]
                 data.append(features)
                 output.append([])
+                if values[4] == 'Iris-setosa':
+                    target.append([1, 0, 0])
+                if values[4] == 'Iris-versicolor':
+                    target.append([0, 1, 0])
+                if values[4] == 'Iris-virginica':
+                    target.append([0, 0, 1])
 
     testedData = np.array(data)
     outputs = np.array(output)
+    targetsTesting = np.array(target)
 
 
 def setupMLP():
     inputNeuronsNumber = len(dataVector[0])
-    print("Ile ma być warstw ukrytych?")
-    hiddenLayersNumber = int(input())
-    clear()
+    hiddenLayersNumber = len(numbers) - 1
     hiddenLayersNeuronNumbers = list()
     for i in range(0, hiddenLayersNumber):
-        print(f"Liczba neuronów w warstwie ukrytej #{i + 1}:")
-        hiddenLayersNeuronNumbers.append(int(input()))
-        clear()
+        hiddenLayersNeuronNumbers.append(numbers[i])
+
+    outputNeuronsNumber = numbers[len(numbers) - 1]
 
     if considerBias:
-        print("Proszę podać bias (ma znaczenie tylko, gdy ustawiono branie biasu pod uwagę):")
-        bias = float(input())
-        clear()
+        bias = biasValue
     else:
         bias = 0
-
-    print("Liczba neuronów w warstwie wyjściowej:")
-    outputNeuronsNumber = int(input())
-    clear()
 
     neurons = list()
     for i in range(0, inputNeuronsNumber):
@@ -187,15 +198,6 @@ mlp = setupMLP()
 
 def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
     for epoch in range(epochs):
-        # Reset previous biases and weights:
-        #for h in mlp.hiddenlayers:
-        #    for n in h.neurons:
-        #        n.prev_weight_updates = [0 for _ in range(len(n.weights))]
-        #        n.prev_bias_update = 0
-        #for n in mlp.outputlayer.neurons:
-        #    n.prev_weight_updates = [0 for _ in range(len(n.weights))]
-        #    n.prev_bias_update = 0
-
         for i in range(len(inputpoints)):
             # Forward propagate
             mlp.setInput(inputpoints[i])
@@ -214,6 +216,9 @@ def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
 def test(mlp, test_inputs, test_targets):
     # Store the number of correct predictions
     correct_predictions = 0
+    targets = list()
+    for t in test_targets:
+        targets.append(np.argmax(t))
 
     # For each test input
     for i in range(len(test_inputs)):
@@ -223,7 +228,9 @@ def test(mlp, test_inputs, test_targets):
         output = mlp.networkOutput()
 
         # If the output is close to the target, count it as a correct prediction
-        if np.argmax(output) == np.argmax(test_targets[i]):
+        outputMax = np.argmax(output)
+
+        if abs(output[outputMax] - test_targets[i][targets[i]]) <= 0.15:
             correct_predictions += 1
 
     # Calculate the accuracy
@@ -231,20 +238,18 @@ def test(mlp, test_inputs, test_targets):
     print(f"Properly classified: {accuracy}/1.0")
 
 
-train(mlp, dataVector, target, 0.5, 0.1, 500)
-test(mlp, testedData, target)
+train(mlp, dataVector, target, learningRate, momentumRate, epochsNumber)
+test(mlp, testedData, targetsTesting)
 
-##ZAPISYWANIE
-file = open('networks/network.txt', 'wb')
-pickle.dump(mlp, file)
-file.close()
 
-##ODCZYTYWANIE
-file = open('networks/network.txt', 'rb')
-mlpOdczytaneZPliku = pickle.load(file)
-file.close()
+def save(path, mlpObject):
+    file = open(path, 'wb')
+    pickle.dump(mlpObject, file)
+    file.close()
 
-if programMode == 0:
-    import learning
-else:
-    import testing
+
+def load(path):
+    file = open(path, 'rb')
+    mlpObject = pickle.load(file)
+    file.close()
+    return mlpObject
