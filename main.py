@@ -14,6 +14,7 @@ numbers = list()  # number of neurons in each layer
 considerBias = None  # 0/1
 considerMomentum = None  # 0/1
 programMode = None  # 0 - learning/1 - testing
+exercise = None  # 0 - classification/1 - autoencoder
 biasValue = None  # 0-1
 learningRate = None  # 0-1
 momentumRate = None  # 0-1
@@ -21,6 +22,8 @@ epochsNumber = None  # int
 networkFile = None  # path
 learningFile = None  # path
 testingFile = None  # path
+autolearningFile = None  # path
+autotestingFile = None  # path
 
 dataVector = [list()]
 target = list()
@@ -55,6 +58,8 @@ with open("settings.txt", "r") as file:
                 considerMomentum = int(line)
             elif programMode is None:
                 programMode = int(line)
+            elif exercise is None:
+                exercise = int(line)
             elif biasValue is None:
                 biasValue = float(line)
             elif learningRate is None:
@@ -69,6 +74,10 @@ with open("settings.txt", "r") as file:
                 learningFile = line
             elif testingFile is None:
                 testingFile = line
+            elif autolearningFile is None:
+                autolearningFile = line
+            elif autotestingFile is None:
+                autotestingFile = line
             else:
                 print("Unexpected line in the file:", line)
 
@@ -106,48 +115,76 @@ def loadLearningData():
     global dataVector, target
     data = []
     target = []
-    with open(learningFile, 'r') as file:
+    with open(learningFile if exercise == 0 else autolearningFile, 'r') as file:
         for line in file:
             line = line.strip()
             if line:
                 values = line.split(',')
                 features = [float(value) for value in values[:4]]
                 data.append(features)
-                if values[4] == 'Iris-setosa':
-                    target.append([1, 0, 0])
-                if values[4] == 'Iris-versicolor':
-                    target.append([0, 1, 0])
-                if values[4] == 'Iris-virginica':
-                    target.append([0, 0, 1])
+                if exercise == 0:
+                    if values[4] == 'Iris-setosa':
+                        target.append([1, 0, 0])
+                    if values[4] == 'Iris-versicolor':
+                        target.append([0, 1, 0])
+                    if values[4] == 'Iris-virginica':
+                        target.append([0, 0, 1])
+                else:
+                    if values[4] == '0':
+                        target.append([1, 0, 0, 0])
+                    if values[4] == '1':
+                        target.append([0, 1, 0, 0])
+                    if values[4] == '2':
+                        target.append([0, 0, 1, 0])
+                    if values[4] == '3':
+                        target.append([0, 0, 0, 1])
 
     dataVector = np.array(data)
     target = np.array(target)
 
 
 def loadTestingData():
-    global testedData, outputs, targetsTesting
+    global testedData, targetsTesting
     data = []
     target = []
-    output = []
-    with open(testingFile, 'r') as file:
+    with open(testingFile if exercise == 0 else autotestingFile, 'r') as file:
         for line in file:
             line = line.strip()
             if line:
                 values = line.split(',')
                 features = [float(value) for value in values[:4]]
                 data.append(features)
-                output.append([])
-                if values[4] == 'Iris-setosa':
-                    target.append([1, 0, 0])
-                if values[4] == 'Iris-versicolor':
-                    target.append([0, 1, 0])
-                if values[4] == 'Iris-virginica':
-                    target.append([0, 0, 1])
+                if exercise == 0:
+                    if values[4] == 'Iris-setosa':
+                        target.append([1, 0, 0])
+                    if values[4] == 'Iris-versicolor':
+                        target.append([0, 1, 0])
+                    if values[4] == 'Iris-virginica':
+                        target.append([0, 0, 1])
+                else:
+                    if values[4] == '0':
+                        target.append([1, 0, 0, 0])
+                    if values[4] == '1':
+                        target.append([0, 1, 0, 0])
+                    if values[4] == '2':
+                        target.append([0, 0, 1, 0])
+                    if values[4] == '3':
+                        target.append([0, 0, 0, 1])
 
     testedData = np.array(data)
-    outputs = np.array(output)
     targetsTesting = np.array(target)
 
+def save(path, mlpObject):
+    file = open(path, 'wb')
+    pickle.dump(mlpObject, file)
+    file.close()
+
+
+def load(path):
+    file = open(path, 'rb')
+    mlpObject = pickle.load(file)
+    file.close()
+    return mlpObject
 
 def setupMLP():
     inputNeuronsNumber = len(dataVector[0])
@@ -226,17 +263,14 @@ def plotting(epochs, errors):
     plt.plot(epochs, errors)
     plt.xlabel("Epoka")
     plt.ylabel("Wartość Błędu")
-    plt.title("Zależność Wartości Błędu od Epoki")
+    plt.title("Zależność wartości błędu od epoki")
     plt.xticks(np.arange(start=0, stop=(len(epochs) + 1), step=(len(epochs) / 10)))
     plt.show()
 
 
 def test(mlp, test_inputs, test_targets):
-    # Store the number of correct predictions
-    correct_predictions = 0
-    targets = list()
-    for t in test_targets:
-        targets.append(np.argmax(t))
+    # Initialize the confusion matrix with 0's
+    confusion_matrix = np.zeros((3, 3))
 
     # For each test input
     for i in range(len(test_inputs)):
@@ -245,29 +279,44 @@ def test(mlp, test_inputs, test_targets):
         mlp.forwardPropagation()
         output = mlp.networkOutput()
 
-        # If the output is close to the target, count it as a correct prediction
-        outputMax = np.argmax(output)
+        # Get the indices of the maximum predicted class and the actual class
+        predicted_class = np.argmax(output)
+        actual_class = np.argmax(test_targets[i])
 
-        if abs(output[outputMax] - test_targets[i][targets[i]]) <= 0.2:
-            correct_predictions += 1
+        # Update the confusion matrix
+        confusion_matrix[actual_class][predicted_class] += 1
 
-    # Calculate the accuracy
-    accuracy = correct_predictions / len(test_inputs)
-    print(f"Properly classified: {accuracy}/1.0")
+        if exercise == 1:
+            print(f"Inputs: {test_inputs[i]}")
+            print(f"Outputs: {output}")
+            print(f"Targets: {test_targets[i]}")
+            print(f"————————————————————————————")
+
+    # Print the confusion matrix
+    print("Confusion Matrix:")
+    print(confusion_matrix)
+
+    # Calculate precision, recall and f1-score for each class
+    for i, class_name in enumerate(['setosa', 'versicolor', 'virginica']):
+        precision = confusion_matrix[i, i] / np.sum(confusion_matrix[:, i])
+        recall = confusion_matrix[i, i] / np.sum(confusion_matrix[i, :])
+        f1_score = 2 * (precision * recall) / (precision + recall)
+        print(f"{class_name} - Precision: {precision}, Recall: {recall}, F1 Score: {f1_score}")
+
+    # If exercise is 0, print the counts of correct predictions
+    if exercise == 0:
+        correct_predictions = np.trace(confusion_matrix)
+        accuracy = correct_predictions / np.sum(confusion_matrix)
+        print(f"Properly classified: {accuracy}/1.0")
+        print(f"Correct setosa: {confusion_matrix[0,0]}")
+        print(f"Correct virginica: {confusion_matrix[1,1]}")
+        print(f"Correct versicolor: {confusion_matrix[2,2]}")
 
 
-train(mlp, dataVector, target, learningRate, momentumRate, epochsNumber)
-test(mlp, testedData, targetsTesting)
 
-
-def save(path, mlpObject):
-    file = open(path, 'wb')
-    pickle.dump(mlpObject, file)
-    file.close()
-
-
-def load(path):
-    file = open(path, 'rb')
-    mlpObject = pickle.load(file)
-    file.close()
-    return mlpObject
+if programMode == 0:
+    train(mlp, dataVector, target, learningRate, momentumRate, epochsNumber)
+    save(networkFile, mlp)
+else:
+    loadedMLP = load(networkFile)
+    test(loadedMLP, testedData, targetsTesting)

@@ -4,10 +4,13 @@
 1
 1
 1
+0
 0.0
-0.03
-0.2
-2000
+0.05
+0.3
+400
 networks\network.mts
 patterns\learning.csv
 patterns\testing.csv
+patterns\auto1.csv
+patterns\auto2.csv

@@ -5,10 +5,13 @@
 0   // czy uwzględniać bias (0 – nie, 1 – tak)
 0   // czy uwzględniać momentum (0 – nie, 1 – tak)
 0   // tryb nauki/testowania (0 – nauka, 1 – testowanie)
+0   // klasyfikacja/autoenkoder (0 – klasyfikacja, 1 – autoenkoder)
 0.1 // wartość biasu
 0.5 // wartość współczynnika nauki
 0.1 // wartość momentum
 500 // ilość epok
 networks\network.txt // plik sieci – tu sieć jest zapisywana i stąd jest odczytywana, być może inny format będzie
-patterns\learning.csv // zestaw uczący
-patterns\testing.csv // zestaw testujący
+patterns\learning.csv // zestaw uczący, klasyfikacja
+patterns\testing.csv // zestaw testujący, klasyfikacja
+patterns\auto1.csv // zestaw uczący, autoenkoder
+patterns\auto2.csv // zestaw testujący, autoenkoder
