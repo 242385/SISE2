@@ -36,7 +36,7 @@ class MLP:
             for neuron in layer.neurons:
                 for k in range(len(neuron.weights)):
                     # Compute gradient (negative for descent)
-                    gradient = - neuron.delta * inputs[k]
+                    gradient = -neuron.delta * inputs[k]
                     # Compute the difference between current and previous weight
                     weight_difference = neuron.weights[k] - neuron.prev_weights[k]
                     # Compute the weight update

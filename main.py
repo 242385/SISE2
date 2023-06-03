@@ -240,21 +240,22 @@ def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
     epochsPlot = []
     error = 1
     for epoch in range(epochs):
-            for i in range(len(inputpoints)):
-                # Forward propagate
-                mlp.setInput(inputpoints[i])
-                mlp.forwardPropagation()
+        random.shuffle(inputpoints)
+        for i in range(len(inputpoints)):
+            # Forward propagate
+            mlp.setInput(inputpoints[i])
+            mlp.forwardPropagation()
 
-                # Compute and print error
-                output = mlp.networkOutput()
-                error = mlp.computeError(targets[i])
+            # Compute and print error
+            output = mlp.networkOutput()
+            error = mlp.computeError(targets[i])
 
-                # Back propagate
-                mlp.backPropagation(targets[i], learning_rate, momentumCoeff, considerBias, considerMomentum)
+            # Back propagate
+            mlp.backPropagation(targets[i], learning_rate, momentumCoeff, considerBias, considerMomentum)
 
-            print(f'Epoch: {epoch}, Error: {error}')
-            errorsPlot.append(float(error))
-            epochsPlot.append(epoch)
+        print(f'Epoch: {epoch}, Error: {error}')
+        errorsPlot.append(float(error))
+        epochsPlot.append(epoch)
 
     plotting(epochsPlot, errorsPlot)
 
@@ -292,19 +293,20 @@ def test(mlp, test_inputs, test_targets):
             print(f"Targets: {test_targets[i]}")
             print(f"————————————————————————————")
 
-    # Print the confusion matrix
-    print("Confusion Matrix:")
-    print(confusion_matrix)
-
-    # Calculate precision, recall and f1-score for each class
-    for i, class_name in enumerate(['setosa', 'versicolor', 'virginica']):
-        precision = confusion_matrix[i, i] / np.sum(confusion_matrix[:, i])
-        recall = confusion_matrix[i, i] / np.sum(confusion_matrix[i, :])
-        f1_score = 2 * (precision * recall) / (precision + recall)
-        print(f"{class_name} - Precision: {precision}, Recall: {recall}, F1 Score: {f1_score}")
-
-    # If exercise is 0, print the counts of correct predictions
     if exercise == 0:
+        # Print the confusion matrix
+        print("Confusion Matrix:")
+        print(confusion_matrix)
+
+        # Calculate precision, recall and f1-score for each class
+        for i, class_name in enumerate(['setosa', 'versicolor', 'virginica']):
+            precision = confusion_matrix[i, i] / np.sum(confusion_matrix[:, i])
+            recall = confusion_matrix[i, i] / np.sum(confusion_matrix[i, :])
+            f1_score = 2 * (precision * recall) / (precision + recall)
+            print(f"{class_name} - Precision: {precision}, Recall: {recall}, F1 Score: {f1_score}")
+
+        # If exercise is 0, print the counts of correct predictions
+
         correct_predictions = np.trace(confusion_matrix)
         accuracy = correct_predictions / np.sum(confusion_matrix)
         print(f"Properly classified: {accuracy}/1.0")
