@@ -1,6 +1,7 @@
 from enum import Enum
 import numpy as np
-
+import random
+from classes.neuron import *
 
 class layerType(Enum):
     INPUT = 0
@@ -9,28 +10,26 @@ class layerType(Enum):
 
 
 class Layer:
-    def __init__(self, neurons, inputs, layertype):
-        self.neurons = neurons
-        self.inputs = inputs
-        self.outputs = []  # initialize as empty, will be set in layerOutput()
-        self.type = layertype
+    def __init__(self, num_neurons, bias):
 
-    def A(self):
-        return np.array([neuron.weights for neuron in self.neurons])
+        # Every neuron in a layer shares the same bias
+        self.bias = bias if bias else random.random()
 
-    def x(self):
-        return self.inputs
+        self.neurons = []
+        for i in range(num_neurons):
+            self.neurons.append(Neuron(self.bias))
 
-    def y(self):
-        return np.dot(self.A(), self.x())
+    def forwardPropagation(self, inputs):
+        outputs = []
+        for neuron in self.neurons:
+            outputs.append(neuron.calculate_output(inputs))
+        return outputs
 
-    def layerOutput(self):
-        if self.type == layerType.INPUT:
-            self.outputs = self.inputs
-        else:
-            self.outputs = sigmoid(self.y())
-        return self.outputs
-
+    def get_outputs(self):
+        outputs = []
+        for neuron in self.neurons:
+            outputs.append(neuron.output)
+        return outputs
 
 def sigmoid(v):
     outputVector = list()

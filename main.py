@@ -102,13 +102,7 @@ def clear():
     flush_input()
 
 
-def randomWeights(count):
-    weights = list()
-    for i in range(0, count):
-        r = random.Random()
-        x = r.uniform(-0.5, 0.5)
-        weights.append(x)
-    return weights
+
 
 
 def loadLearningData():
@@ -200,31 +194,14 @@ def setupMLP():
     else:
         bias = 0
 
-    neurons = list()
-    for i in range(0, inputNeuronsNumber):
-        n = Neuron(None, bias)
-        neurons.append(n)
-    inputLayer = Layer(neurons, None, layerType.INPUT)
-
-    neurons = list()
-    for j in range(0, hiddenLayersNeuronNumbers[0]):
-        n = Neuron(randomWeights(len(inputLayer.neurons)), bias)
-        neurons.append(n)
+    inputLayer = Layer(inputNeuronsNumber, bias)
     hiddenLayers = list()
-    hiddenLayers.append(Layer(neurons, None, layerType.HIDDEN))
 
-    for i in range(1, hiddenLayersNumber):
-        neurons = list()
-        for j in range(0, hiddenLayersNeuronNumbers[i]):
-            n = Neuron(randomWeights(hiddenLayersNeuronNumbers[i - 1]), bias)
-            neurons.append(n)
-        hiddenLayers.append(Layer(neurons, None, layerType.HIDDEN))
+    for i in range(hiddenLayersNumber):
+        hiddenLayers.append(Layer(hiddenLayersNeuronNumbers[i], bias))
 
-    neurons = list()
-    for i in range(0, outputNeuronsNumber):
-        n = Neuron(randomWeights(hiddenLayersNeuronNumbers[len(hiddenLayersNeuronNumbers) - 1]), bias)
-        neurons.append(n)
-    outputLayer = Layer(neurons, None, layerType.OUTPUT)
+    outputLayer = Layer(outputNeuronsNumber, bias)
+
     return MLP(inputLayer, hiddenLayers, outputLayer)
 
 
@@ -239,25 +216,37 @@ def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
     errorsPlot = []
     epochsPlot = []
     error = 1
+    total_error = 1
+
+    # Combine inputpoints and targets into pairs
+    data = list(zip(inputpoints, targets))
+
     for epoch in range(epochs):
-        random.shuffle(inputpoints)
-        for i in range(len(inputpoints)):
-            # Forward propagate
-            mlp.setInput(inputpoints[i])
-            mlp.forwardPropagation()
+        # Shuffle the data
+        random.shuffle(data)
+
+        # Unpack shuffled data
+        inputpoints_shuffled, targets_shuffled = zip(*data)
+
+        errors = list()
+        for i in range(len(inputpoints_shuffled)):
+            mlp.backPropagation(inputpoints_shuffled[i], targets_shuffled[i])
 
             # Compute and print error
-            output = mlp.networkOutput()
-            error = mlp.computeError(targets[i])
+            output = mlp.output_layer.get_outputs()
+            err_param = [(inputpoints_shuffled[i], targets_shuffled[i])]
+            error = mlp.calculate_total_error(err_param)
+            errors.append(error)
 
-            # Back propagate
-            mlp.backPropagation(targets[i], learning_rate, momentumCoeff, considerBias, considerMomentum)
-
-        print(f'Epoch: {epoch}, Error: {error}')
-        errorsPlot.append(float(error))
+        total_error = sum(errors) / len(errors)
+        print(f'Epoch: {epoch}, Error: {total_error}')
+        errorsPlot.append(float(total_error))
         epochsPlot.append(epoch)
 
     plotting(epochsPlot, errorsPlot)
+
+
+
 
 
 def plotting(epochs, errors):

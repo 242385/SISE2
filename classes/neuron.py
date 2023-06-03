@@ -1,34 +1,36 @@
 import numpy as np
 
+
 class Neuron:
-    def __init__(self, weights, bias):
-        self.weights = weights              # Weights on connection between this neuron and the neurons from PREVIOUS layer
+    def __init__(self, bias):
         self.bias = bias
-        self.delta = float()
-        if weights is not None:
-            self.prev_weights = [0 for _ in range(len(weights))]
-        self.prev_bias = 0
+        self.weights = []
 
-    def z(self, inputs):
-        return np.dot(self.weights, inputs) + self.bias
+    def calculate_output(self, inputs):
+        self.inputs = inputs
+        self.output = self.squash(self.calculate_total_net_input())
+        return self.output
 
-    def a(self, inputs):
-        #print(f"a {1 / (1 + np.exp(-self.z(inputs)))}")
-        return 1 / (1 + np.exp(-self.z(inputs)))
+    def calculate_total_net_input(self):
+        total = 0
+        for i in range(len(self.inputs)):
+            total += self.inputs[i] * self.weights[i]
+        return total + self.bias
 
-    def C0(self, inputs, y):
-        #print(f"C0 {0.5 * (self.a(inputs) - y)**2}")
-        return 0.5 * (self.a(inputs) - y)**2
+    def squash(self, total_net_input):
+        return 1 / (1 + np.exp(-total_net_input))
 
-    def dC0da(self, inputs, y):
-        #print(f"dC0da {self.a(inputs) - y}")
-        return self.a(inputs) - y
+    def calculate_pd_error_wrt_total_net_input(self, target_output):
+        return self.calculate_pd_error_wrt_output(target_output) * self.calculate_pd_total_net_input_wrt_input()
 
-    def dadz(self, inputs):
-        s = 1 / (1 + np.exp(-self.z(inputs)))
-        #print(f"dadz {s}")
-        return s * (1 - s)
+    def calculate_error(self, target_output):
+        return 0.5 * (target_output - self.output) ** 2
 
-    def dzdw(self, inputsPreviousLayer):
-        return self.a(inputsPreviousLayer)
+    def calculate_pd_error_wrt_output(self, target_output):
+        return -(target_output - self.output)
 
+    def calculate_pd_total_net_input_wrt_input(self):
+        return self.output * (1 - self.output)
+
+    def calculate_pd_total_net_input_wrt_weight(self, index):
+        return self.inputs[index]
