@@ -3,7 +3,6 @@ import random
 
 
 class MLP:
-    LEARNING_RATE = 0.1
 
     def __init__(self, input_layer, hidden_layers, output_layer):
         self.num_inputs = len(input_layer.neurons)
@@ -52,7 +51,7 @@ class MLP:
         return final_outputs
 
     # Uses online learning, ie updating the weights after each training case
-    def backPropagation(self, training_inputs, training_outputs):
+    def backPropagation(self, training_inputs, training_outputs, learning_rate):
         self.forwardPropagation(training_inputs)
 
         # 1. Output neuron deltas
@@ -89,7 +88,7 @@ class MLP:
                 pd_error_wrt_weight = pd_errors_wrt_output_neuron_total_net_input[o] * self.output_layer.neurons[o].calculate_pd_total_net_input_wrt_weight(w_ho)
 
                 # Δw = α * ∂Eⱼ/∂wᵢ
-                self.output_layer.neurons[o].weights[w_ho] -= self.LEARNING_RATE * pd_error_wrt_weight
+                self.output_layer.neurons[o].weights[w_ho] -= learning_rate * pd_error_wrt_weight
 
         # 4. Update hidden neuron weights
         for l in range(len(self.hidden_layers) -1, -1, -1):
@@ -99,7 +98,7 @@ class MLP:
                     pd_error_wrt_weight = pd_errors_wrt_hidden_neuron_total_net_input[l][h] * self.hidden_layers[l].neurons[h].calculate_pd_total_net_input_wrt_weight(w_ih)
 
                     # Δw = α * ∂Eⱼ/∂wᵢ
-                    self.hidden_layers[l].neurons[h].weights[w_ih] -= self.LEARNING_RATE * pd_error_wrt_weight
+                    self.hidden_layers[l].neurons[h].weights[w_ih] -= learning_rate * pd_error_wrt_weight
 
     def calculate_total_error(self, training_sets):
         total_error = 0

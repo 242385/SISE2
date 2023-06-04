@@ -215,9 +215,6 @@ mlp = setupMLP()
 def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
     errorsPlot = []
     epochsPlot = []
-    error = 1
-    total_error = 1
-
     # Combine inputpoints and targets into pairs
     data = list(zip(inputpoints, targets))
 
@@ -230,7 +227,7 @@ def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
 
         errors = list()
         for i in range(len(inputpoints_shuffled)):
-            mlp.backPropagation(inputpoints_shuffled[i], targets_shuffled[i])
+            mlp.backPropagation(inputpoints_shuffled[i], targets_shuffled[i], learning_rate)
 
             # Compute and print error
             output = mlp.output_layer.get_outputs()
@@ -244,10 +241,6 @@ def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
         epochsPlot.append(epoch)
 
     plotting(epochsPlot, errorsPlot)
-
-
-
-
 
 def plotting(epochs, errors):
     plt.plot(epochs, errors)
