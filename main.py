@@ -279,14 +279,13 @@ def test(mlp, test_inputs, test_targets):
             f1_score = 2 * (precision * recall) / (precision + recall)
             print(f"{class_name} - Precision: {precision}, Recall: {recall}, F1 Score: {f1_score}")
 
-            # If exercise is 0, print the counts of correct predictions
-
             correct_predictions = np.trace(confusion_matrix)
             accuracy = correct_predictions / np.sum(confusion_matrix)
-            print(f"Properly classified: {accuracy}/1.0")
-            print(f"Correct setosa: {confusion_matrix[0, 0]}")
-            print(f"Correct virginica: {confusion_matrix[1, 1]}")
-            print(f"Correct versicolor: {confusion_matrix[2, 2]}")
+
+        print(f"Properly classified: {accuracy}/1.0")
+        print(f"Correct setosa: {confusion_matrix[0, 0]}")
+        print(f"Correct virginica: {confusion_matrix[1, 1]}")
+        print(f"Correct versicolor: {confusion_matrix[2, 2]}")
 
     else:
         for i in range(0, len(test_inputs)):

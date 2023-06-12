@@ -85,24 +85,35 @@ class MLP:
                 # ∂E/∂zⱼ = dE/dyⱼ * ∂zⱼ/∂
                 pd_errors_wrt_hidden_neuron_total_net_input[0][h] = d_error_wrt_hidden_neuron_output * self.hidden_layers[l].neurons[h].calculate_pd_total_net_input_wrt_input()
 
-        # 3. Update output neuron weights
+        # Momentum factors for output and hidden neurons
+        momentum_output = [0] * len(self.output_layer.neurons)
+        momentum_hidden = [[0] * len(layer.neurons) for layer in self.hidden_layers]
+
+        # 3. For output layer
         for o in range(len(self.output_layer.neurons)):
+            # Update weights
             for w_ho in range(len(self.output_layer.neurons[o].weights)):
-                # ∂Eⱼ/∂wᵢⱼ = ∂E/∂zⱼ * ∂zⱼ/∂wᵢⱼ
+                # Calculate the gradient and the change of weight
                 pd_error_wrt_weight = pd_errors_wrt_output_neuron_total_net_input[o] * self.output_layer.neurons[o].calculate_pd_total_net_input_wrt_weight(w_ho)
+                weight_delta = learning_rate * pd_error_wrt_weight
+                # Consider momentum
+                if consider_momentum:
+                    weight_delta += momentum_coeff * momentum_output[o]
+                    momentum_output[o] = weight_delta
+                self.output_layer.neurons[o].weights[w_ho] -= weight_delta
 
-                # Δw = α * ∂Eⱼ/∂wᵢ
-                self.output_layer.neurons[o].weights[w_ho] -= learning_rate * pd_error_wrt_weight
-
-        # 4. Update hidden neuron weights
-        for l in range(len(self.hidden_layers) -1, -1, -1):
+        # 4. For hidden layers
+        for l in range(len(self.hidden_layers)):
             for h in range(len(self.hidden_layers[l].neurons)):
                 for w_ih in range(len(self.hidden_layers[l].neurons[h].weights)):
-                    # ∂Eⱼ/∂wᵢ = ∂E/∂zⱼ * ∂zⱼ/∂wᵢ
+                    # Calculate the gradient and the change of weight
                     pd_error_wrt_weight = pd_errors_wrt_hidden_neuron_total_net_input[l][h] * self.hidden_layers[l].neurons[h].calculate_pd_total_net_input_wrt_weight(w_ih)
-
-                    # Δw = α * ∂Eⱼ/∂wᵢ
-                    self.hidden_layers[l].neurons[h].weights[w_ih] -= learning_rate * pd_error_wrt_weight
+                    weight_delta = learning_rate * pd_error_wrt_weight
+                    # Consider momentum
+                    if consider_momentum:
+                        weight_delta += momentum_coeff * momentum_hidden[l][h]
+                        momentum_hidden[l][h] = weight_delta
+                    self.hidden_layers[l].neurons[h].weights[w_ih] -= weight_delta
 
         # 5. Update output neuron biases
         if consider_bias:
