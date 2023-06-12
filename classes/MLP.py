@@ -1,5 +1,5 @@
-import numpy as np
 import random
+import sys
 
 
 class MLP:
@@ -51,14 +51,18 @@ class MLP:
         return final_outputs
 
     # Uses online learning, ie updating the weights after each training case
-    def backPropagation(self, training_inputs, training_outputs, learning_rate):
+    def backPropagation(self, training_inputs, training_outputs, learning_rate, momentum_coeff, consider_bias, consider_momentum):
         self.forwardPropagation(training_inputs)
 
         # 1. Output neuron deltas
         pd_errors_wrt_output_neuron_total_net_input = [0] * len(self.output_layer.neurons)
         for o in range(len(self.output_layer.neurons)):
             # ∂E/∂zⱼ
-            pd_errors_wrt_output_neuron_total_net_input[o] = self.output_layer.neurons[o].calculate_pd_error_wrt_total_net_input(training_outputs[o])
+            try:
+                pd_errors_wrt_output_neuron_total_net_input[o] = self.output_layer.neurons[o].calculate_pd_error_wrt_total_net_input(training_outputs[o])
+            except IndexError:
+                print("An index error occured. Is output neurons number correct for this dataset?")
+                sys.exit()
 
         # 2. Hidden neurons deltas
         pd_errors_wrt_hidden_neuron_total_net_input = []
@@ -100,13 +104,35 @@ class MLP:
                     # Δw = α * ∂Eⱼ/∂wᵢ
                     self.hidden_layers[l].neurons[h].weights[w_ih] -= learning_rate * pd_error_wrt_weight
 
+        # 5. Update output neuron biases
+        if consider_bias:
+            for o in range(len(self.output_layer.neurons)):
+                # ∂Eⱼ/∂b = ∂E/∂zⱼ * ∂zⱼ/∂b, note that ∂zⱼ/∂b = 1
+                pd_error_wrt_bias = pd_errors_wrt_output_neuron_total_net_input[o]
+
+                # Δb = α * ∂Eⱼ/∂b
+                self.output_layer.neurons[o].bias -= learning_rate * pd_error_wrt_bias
+
+            # 6. Update hidden neuron biases
+            for l in range(len(self.hidden_layers) - 1, -1, -1):
+                for h in range(len(self.hidden_layers[l].neurons)):
+                    # ∂Eⱼ/∂b = ∂E/∂zⱼ * ∂zⱼ/∂b, note that ∂zⱼ/∂b = 1
+                    pd_error_wrt_bias = pd_errors_wrt_hidden_neuron_total_net_input[l][h]
+
+                    # Δb = α * ∂Eⱼ/∂b
+                    self.hidden_layers[l].neurons[h].bias -= learning_rate * pd_error_wrt_bias
+
     def calculate_total_error(self, training_sets):
         total_error = 0
         for t in range(len(training_sets)):
             training_inputs, training_outputs = training_sets[t]
             self.forwardPropagation(training_inputs)
             for o in range(len(training_outputs)):
-                total_error += self.output_layer.neurons[o].calculate_error(training_outputs[o])
+                try:
+                    total_error += self.output_layer.neurons[o].calculate_error(training_outputs[o])
+                except IndexError:
+                    print("An index error occured. Is output neurons number correct for this dataset?")
+                    sys.exit()
         return total_error
 
     def randomWeights(self, count):

@@ -8,7 +8,6 @@ class layerType(Enum):
     HIDDEN = 1
     OUTPUT = 2
 
-
 class Layer:
     def __init__(self, num_neurons, bias):
 

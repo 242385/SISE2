@@ -1,10 +1,7 @@
 # Import, system
-import random
 import pickle
-import numpy as np
 import matplotlib.pyplot as plt
 
-from classes.neuron import *
 from classes.layer import *
 from classes.MLP import *
 
@@ -28,7 +25,7 @@ autotestingFile = None  # path
 dataVector = [list()]
 target = list()
 
-testedData = [list()]
+testedData = list()
 targetsTesting = list()
 outputs = list()
 
@@ -102,9 +99,6 @@ def clear():
     flush_input()
 
 
-
-
-
 def loadLearningData():
     global dataVector, target
     data = []
@@ -125,13 +119,13 @@ def loadLearningData():
                         target.append([0, 0, 1])
                 else:
                     if values[4] == '0':
-                        target.append([1, 0, 0, 0])
+                        target.append([1.0, 0.0, 0.0, 0.0])
                     if values[4] == '1':
-                        target.append([0, 1, 0, 0])
+                        target.append([0.0, 1.0, 0.0, 0.0])
                     if values[4] == '2':
-                        target.append([0, 0, 1, 0])
+                        target.append([0.0, 0.0, 1.0, 0.0])
                     if values[4] == '3':
-                        target.append([0, 0, 0, 1])
+                        target.append([0.0, 0.0, 0.0, 1.0])
 
     dataVector = np.array(data)
     target = np.array(target)
@@ -141,7 +135,7 @@ def loadTestingData():
     global testedData, targetsTesting
     data = []
     target = []
-    with open(testingFile if exercise == 0 else autotestingFile, 'r') as file:
+    with open(testingFile if exercise == 0 else autolearningFile, 'r') as file:
         for line in file:
             line = line.strip()
             if line:
@@ -157,13 +151,13 @@ def loadTestingData():
                         target.append([0, 0, 1])
                 else:
                     if values[4] == '0':
-                        target.append([1, 0, 0, 0])
+                        target.append([1.0, 0.0, 0.0, 0.0])
                     if values[4] == '1':
-                        target.append([0, 1, 0, 0])
+                        target.append([0.0, 1.0, 0.0, 0.0])
                     if values[4] == '2':
-                        target.append([0, 0, 1, 0])
+                        target.append([0.0, 0.0, 1.0, 0.0])
                     if values[4] == '3':
-                        target.append([0, 0, 0, 1])
+                        target.append([0.0, 0.0, 0.0, 1.0])
 
     testedData = np.array(data)
     targetsTesting = np.array(target)
@@ -227,7 +221,7 @@ def train(mlp, inputpoints, targets, learning_rate, momentumCoeff, epochs):
 
         errors = list()
         for i in range(len(inputpoints_shuffled)):
-            mlp.backPropagation(inputpoints_shuffled[i], targets_shuffled[i], learning_rate)
+            mlp.backPropagation(inputpoints_shuffled[i], targets_shuffled[i], learning_rate, momentumCoeff, considerBias, considerMomentum)
 
             # Compute and print error
             output = mlp.output_layer.get_outputs()
@@ -253,14 +247,18 @@ def plotting(epochs, errors):
 
 def test(mlp, test_inputs, test_targets):
     # Initialize the confusion matrix with 0's
-    confusion_matrix = np.zeros((3, 3))
-
-    # For each test input
-    for i in range(len(test_inputs)):
-        # Get the MLP's output for this input
-        mlp.setInput(test_inputs[i])
-        mlp.forwardPropagation()
-        output = mlp.networkOutput()
+    if exercise == 0:
+        confusion_matrix = np.zeros((3, 3))
+    else:
+        confusion_matrix = np.zeros((4, 4))
+    print("———————————————————————————————————————————————————————————————————————————————————————————————————")
+    for i in range(0, len(test_inputs)):
+        mlp.forwardPropagation(test_inputs[i])
+        output = mlp.output_layer.get_outputs()
+        print("INPUT: ", test_inputs[i])
+        print("OUTPUT: ", output)
+        print("DESIRED: ", test_targets[i])
+        print("———————————————————————————————————————————————————————————————————————————————————————————————————")
 
         # Get the indices of the maximum predicted class and the actual class
         predicted_class = np.argmax(output)
@@ -269,17 +267,11 @@ def test(mlp, test_inputs, test_targets):
         # Update the confusion matrix
         confusion_matrix[actual_class][predicted_class] += 1
 
-        if exercise == 1:
-            print(f"Inputs: {test_inputs[i]}")
-            print(f"Outputs: {output}")
-            print(f"Targets: {test_targets[i]}")
-            print(f"————————————————————————————")
+    # Print the confusion matrix
+    print("Confusion Matrix:")
+    print(confusion_matrix)
 
     if exercise == 0:
-        # Print the confusion matrix
-        print("Confusion Matrix:")
-        print(confusion_matrix)
-
         # Calculate precision, recall and f1-score for each class
         for i, class_name in enumerate(['setosa', 'versicolor', 'virginica']):
             precision = confusion_matrix[i, i] / np.sum(confusion_matrix[:, i])
@@ -287,15 +279,21 @@ def test(mlp, test_inputs, test_targets):
             f1_score = 2 * (precision * recall) / (precision + recall)
             print(f"{class_name} - Precision: {precision}, Recall: {recall}, F1 Score: {f1_score}")
 
-        # If exercise is 0, print the counts of correct predictions
+            # If exercise is 0, print the counts of correct predictions
 
-        correct_predictions = np.trace(confusion_matrix)
-        accuracy = correct_predictions / np.sum(confusion_matrix)
-        print(f"Properly classified: {accuracy}/1.0")
-        print(f"Correct setosa: {confusion_matrix[0,0]}")
-        print(f"Correct virginica: {confusion_matrix[1,1]}")
-        print(f"Correct versicolor: {confusion_matrix[2,2]}")
+            correct_predictions = np.trace(confusion_matrix)
+            accuracy = correct_predictions / np.sum(confusion_matrix)
+            print(f"Properly classified: {accuracy}/1.0")
+            print(f"Correct setosa: {confusion_matrix[0, 0]}")
+            print(f"Correct virginica: {confusion_matrix[1, 1]}")
+            print(f"Correct versicolor: {confusion_matrix[2, 2]}")
 
+    else:
+        for i in range(0, len(test_inputs)):
+            precision = confusion_matrix[i, i] / np.sum(confusion_matrix[:, i])
+            recall = confusion_matrix[i, i] / np.sum(confusion_matrix[i, :])
+            f1_score = 2 * (precision * recall) / (precision + recall)
+            print(f"\"1\" on {i} position - Precision: {precision}, Recall: {recall}, F1 Score: {f1_score}")
 
 
 if programMode == 0:

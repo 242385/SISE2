@@ -1,14 +1,14 @@
+2
 4
-3
 
 1
+0
 1
-0
-0
-0.0
-0.5
+1
 0.1
-500
+0.6
+0.9
+5000
 networks\network.mts
 patterns\learning.csv
 patterns\testing.csv
