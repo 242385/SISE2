@@ -21,7 +21,7 @@ class Layer:
     def forwardPropagation(self, inputs):
         outputs = []
         for neuron in self.neurons:
-            outputs.append(neuron.calculate_output(inputs))
+            outputs.append(neuron.a(inputs))
         return outputs
 
     def get_outputs(self):
